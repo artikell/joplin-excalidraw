@@ -22,11 +22,9 @@
     "tar": "^6.0.5",
     "ts-loader": "^7.0.5",
     "typescript": "^3.9.3",
+    "webpack": "^4.43.0",
     "webpack-cli": "^3.3.11",
+    "copy-webpack-plugin": "^6.1.0",
     "yargs": "^16.2.0"
-  },
-  "dependencies": {
-    "copy-webpack-plugin": "^11.0.0",
-    "webpack": "^5.74.0"
   }
 }
