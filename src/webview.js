@@ -1,3 +1,5 @@
+let excalidrawJson = "{}"
+let excalidrawInitData = {}
 /*eslint-disable */
 const App = () => {
     const excalidrawRef = React.useRef(null);
@@ -38,21 +40,26 @@ const App = () => {
           ref: excalidrawWrapperRef
         },
         React.createElement(ExcalidrawLib.Excalidraw, {
+          initialData: excalidrawInitData,
           onChange: (elements, state) => {
-            console.log("Elements :", elements, "State : ", state)
-            console.log("Elements :", elements, "State : ", state)
+            excalidrawJson = ExcalidrawLib.serializeAsJSON(elements, state)
           }
         })
       )
     );
   };
-
   
 const start = async () => {
   let stopped = false
   let processingMessage = false
 
+  document.getElementById('joplin-plugin-content').parentElement.setAttribute("style","height:100%;");
+
   async function init(message) {
+    excalidrawJson = message.options;
+    excalidrawInitData = JSON.parse(excalidrawJson);
+    const excalidrawWrapper = document.getElementById("excalidraw");
+    ReactDOM.render(React.createElement(App), excalidrawWrapper);
     infiniteSave()
   }
 
@@ -61,8 +68,6 @@ const start = async () => {
       if (stopped) return
       await new Promise(resolve => setTimeout(() => resolve(), 500))
     }
-    const excalidrawWrapper = document.getElementById("excalidraw");
-    ReactDOM.render(React.createElement(App), excalidrawWrapper);
     return await cb()
   }
 
@@ -84,8 +89,7 @@ const start = async () => {
     while (!stopped) {
       webviewApi.postMessage({
         message: 'excalidraw_sync',
-        sheets: "",
-        jsonData: ""
+        jsonData: excalidrawJson
       })
       await new Promise(resolve => setTimeout(() => resolve(), 2000))
     }
@@ -96,13 +100,12 @@ const start = async () => {
       return console.log("ALREADY PROCESSING", message.message)
 
     processingMessage = message.message
-    if (message.message === 'excalidraw_init')
+    if (message.message === 'excalidraw_init') {
       stopped = false
       await waitForLuckySheet(async () => await init(message))
-    // if (message.message === 'excalidraw_close') {
-    //   stopped = true
-    //   await waitForLuckySheet(async () => await luckysheet.destroy())
-    // }
+    } else  if (message.message === 'excalidraw_close') {
+      stopped = true
+    }
 
     console.log("done-processing")
     processingMessage = false

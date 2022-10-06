@@ -3,7 +3,7 @@ import { Settings } from "./types"
 const dataText = 'excalidraw-data'
 const dataTextMD = `\`\`\`${dataText}`
 
-export const isJSheet = (input: string): boolean => input.toLocaleLowerCase().includes('```excalidraw```')
+export const isExcalidraw = (input: string): boolean => input.toLocaleLowerCase().includes('```excalidraw```')
 export const hasData = (input: string): boolean => input.toLocaleLowerCase().includes(dataText)
 
 export const parseData = (input: string): Settings => {

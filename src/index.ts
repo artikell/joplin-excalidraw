@@ -2,7 +2,7 @@ import joplin from 'api'
 import { v4 as uuidv4 } from 'uuid';
 
 import { Settings } from "./types"
-import { replaceData, parseData, isJSheet } from './handleStrings'
+import { replaceData, parseData, isExcalidraw } from './handleStrings'
 
 let panel, note, isOpening
 
@@ -14,12 +14,10 @@ const createPanel = async (): Promise<string> => {
   await joplin.views.panels.setHtml(panel, '<div class="container" id="excalidraw">Hello Excalidraw!!!</div>')
 
   await joplin.views.panels.addScript(panel, './webview.js')
-//  await joplin.views.panels.addScript(panel, './excalidraw.js')
   await joplin.views.panels.addScript(panel, './webview.css')
   await joplin.views.panels.addScript(panel, './react.development.js')
   await joplin.views.panels.addScript(panel, './react-dom.development.js')
   await joplin.views.panels.addScript(panel, './excalidraw.development.js')
-
 
   return panel
 }
@@ -46,14 +44,14 @@ const updateView = async () => {
 
   note = await joplin.workspace.selectedNote()
 
-  if (isJSheet(note?.body)) {
+  if (isExcalidraw(note?.body)) {
     await handleOpen()
   }
   isOpening = false
 }
 
 const handleSync = async ({ jsonData }) => {
-  if (!isJSheet(note?.body) || isOpening) return
+  if (!isExcalidraw(note?.body) || isOpening) return
   note.body = replaceData(note.body, JSON.stringify(jsonData))
   await joplin.commands.execute("editor.setText", note.body);
   await joplin.data.put(['notes', note.id], null, { body: note.body });
