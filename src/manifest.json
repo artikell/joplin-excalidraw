@@ -6,8 +6,8 @@
 	"name": "joplin-excalidraw",
 	"description": "use to write excalidraw in Joplin",
 	"author": "SkyfireLee",
-	"homepage_url": "",
-	"repository_url": "",
-	"keywords": [],
-	"categories": []
+	"homepage_url": "https://github.com/artikell/joplin-excalidraw",
+	"repository_url": "https://github.com/artikell/joplin-excalidraw",
+	"keywords": ["excalidraw"],
+	"categories": ["excalidraw"]
 }
