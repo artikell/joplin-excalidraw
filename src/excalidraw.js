@@ -1,5 +1,4 @@
 /*eslint-disable */
-
 const App = () => {
     const excalidrawRef = React.useRef(null);
     const excalidrawWrapperRef = React.useRef(null);
@@ -126,7 +125,15 @@ const App = () => {
     );
   };
   
-  const excalidrawWrapper = document.getElementById("app");
   
-  ReactDOM.render(React.createElement(App), excalidrawWrapper);
-  
+const ExcalidrawRender = async () => {
+    const excalidrawWrapper = document.getElementById("excalidraw");
+    React.createElement(App)
+    ReactDOM.render(React.createElement(App), excalidrawWrapper);
+}
+
+try {
+  ExcalidrawRender()
+}catch(e) {
+  console.log("ExcalidrawRender error: " + e)
+}
