@@ -12,6 +12,10 @@ Initiate a Excalidraw by writing following in the markdown:
 
 You can now re-open the note and the plugin will load.
 
+## Example
+
+![Excalidraw in action](./example.gif)
+
 ## Notes
 
 - The [excalidraw](https://github.com/excalidraw/excalidraw) library is bundled into the plugin.

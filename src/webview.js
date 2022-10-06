@@ -56,8 +56,8 @@ const start = async () => {
   document.getElementById('joplin-plugin-content').parentElement.setAttribute("style","height:100%;");
 
   async function init(message) {
-    excalidrawJson = message.options;
-    excalidrawInitData = JSON.parse(excalidrawJson);
+    excalidrawInitData = message.options;
+    excalidrawJson = JSON.stringify(excalidrawInitData);
     const excalidrawWrapper = document.getElementById("excalidraw");
     ReactDOM.render(React.createElement(App), excalidrawWrapper);
     infiniteSave()
@@ -89,7 +89,7 @@ const start = async () => {
     while (!stopped) {
       webviewApi.postMessage({
         message: 'excalidraw_sync',
-        jsonData: excalidrawJson
+        jsonData: JSON.parse(excalidrawJson)
       })
       await new Promise(resolve => setTimeout(() => resolve(), 2000))
     }
