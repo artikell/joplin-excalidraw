@@ -1,4 +1,5 @@
 let excalidrawJson = "{}"
+let excalidrawLastJson = "{}"
 let excalidrawInitData = {}
 /*eslint-disable */
 const App = () => {
@@ -87,10 +88,13 @@ const start = async () => {
 
   async function infiniteSave() {
     while (!stopped) {
-      webviewApi.postMessage({
-        message: 'excalidraw_sync',
-        jsonData: JSON.parse(excalidrawJson)
-      })
+      if(excalidrawJson.localeCompare(excalidrawLastJson) != 0) {
+        webviewApi.postMessage({
+          message: 'excalidraw_sync',
+          jsonData: JSON.parse(excalidrawJson)
+        })
+        excalidrawLastJson = excalidrawJson
+      }
       await new Promise(resolve => setTimeout(() => resolve(), 2000))
     }
   }
