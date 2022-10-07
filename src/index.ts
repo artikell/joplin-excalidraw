@@ -33,6 +33,7 @@ const handleClose = async () => {
 const handleOpen = async () => {
   panel = await createPanel()
   const options = await parseData(note.body)
+  await new Promise(resolve => setTimeout(() => resolve(), 200))
   await joplin.views.panels.postMessage(panel, {
     message: 'excalidraw_init',
     options

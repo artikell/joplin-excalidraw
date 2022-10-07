@@ -3,33 +3,7 @@ let excalidrawLastJson = "{}"
 let excalidrawInitData = {}
 /*eslint-disable */
 const App = () => {
-    const excalidrawRef = React.useRef(null);
     const excalidrawWrapperRef = React.useRef(null);
-    const [dimensions, setDimensions] = React.useState({
-      width: undefined,
-      height: undefined
-    });
-  
-    const [viewModeEnabled, setViewModeEnabled] = React.useState(false);
-    const [zenModeEnabled, setZenModeEnabled] = React.useState(false);
-    const [gridModeEnabled, setGridModeEnabled] = React.useState(false);
-  
-    React.useEffect(() => {
-      setDimensions({
-        width: excalidrawWrapperRef.current.getBoundingClientRect().width,
-        height: excalidrawWrapperRef.current.getBoundingClientRect().height
-      });
-      const onResize = () => {
-        setDimensions({
-          width: excalidrawWrapperRef.current.getBoundingClientRect().width,
-          height: excalidrawWrapperRef.current.getBoundingClientRect().height
-        });
-      };
-  
-      window.addEventListener("resize", onResize);
-  
-      return () => window.removeEventListener("resize", onResize);
-    }, [excalidrawWrapperRef]);
   
     return React.createElement(
       React.Fragment,
@@ -53,7 +27,6 @@ const App = () => {
 const start = async () => {
   let stopped = false
   let processingMessage = false
-
   document.getElementById('joplin-plugin-content').parentElement.setAttribute("style","height:100%;");
 
   async function init(message) {

@@ -19,5 +19,5 @@ You can now re-open the note and the plugin will load.
 ## Notes
 
 - The [excalidraw](https://github.com/excalidraw/excalidraw) library is bundled into the plugin.
-- It was only tested in the MacOS Desktop App (but should in theory work across all apps)
+- It was tested in the MacOS,Linux,Windows Desktop App
 - This project refers to the [ThibaultJanBeyer/joplin-sheets](https://github.com/ThibaultJanBeyer/joplin-sheets) project, thank you
