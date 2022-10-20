@@ -14,11 +14,8 @@ const createPanel = async (): Promise<string> => {
  
   await joplin.views.panels.setHtml(panel, '<div class="container" id="excalidraw">Hello Excalidraw!!!</div>')
 
-  await joplin.views.panels.addScript(panel, './webview.js')
-  await joplin.views.panels.addScript(panel, './webview.css')
-  await joplin.views.panels.addScript(panel, './react.development.js')
-  await joplin.views.panels.addScript(panel, './react-dom.development.js')
-  await joplin.views.panels.addScript(panel, './excalidraw.development.js')
+  await joplin.views.panels.addScript(panel, './webview/index.js')
+  await joplin.views.panels.addScript(panel, './webview/index.css')
 
   return panel
 }
