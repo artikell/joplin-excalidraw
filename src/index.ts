@@ -1,9 +1,15 @@
 import joplin from 'api'
 import { v4 as uuidv4 } from 'uuid';
 
+import { ContentScriptType, ToolbarButtonLocation, MenuItem, MenuItemLocation } from 'api/types'
 import { Settings } from "./types"
-import { ToolbarButtonLocation } from 'api/types';
 import { replaceData, parseData, isExcalidraw } from './handleStrings'
+import { createDiagramResource, getDiagramResource, updateDiagramResource } from './resources';
+
+const Config = {
+  ContentScriptId: 'excalidraw-script',
+}
+
 
 let panel, note, isOpening, isHide
 
@@ -11,7 +17,7 @@ const createPanel = async (): Promise<string> => {
   // unfortunately it's wayyy more reliable to just close and re-create than to re-use a panel :'(
   const panel = await joplin.views.panels.create(`excalidraw-${uuidv4()}`)
   await joplin.views.panels.onMessage(panel, handleMessage)
- 
+
   await joplin.views.panels.setHtml(panel, '<div class="container" id="excalidraw">Hello Excalidraw!!!</div>')
 
   await joplin.views.panels.addScript(panel, './webview.js')
@@ -24,7 +30,7 @@ const createPanel = async (): Promise<string> => {
 }
 
 const handleClose = async () => {
-  if(!panel || isHide) return
+  if (!panel || isHide) return
   await joplin.views.panels.postMessage(panel, { message: 'excalidraw_close' })
   await joplin.views.panels.hide(panel)
   isHide = true
@@ -42,10 +48,10 @@ const handleOpen = async () => {
 }
 
 const switchView = async () => {
-  if(isHide) {
-  	await updateView()
+  if (isHide) {
+    await updateView()
   } else {
-  	await handleClose()
+    await handleClose()
   }
 }
 
@@ -68,22 +74,72 @@ const handleSync = async ({ jsonData }) => {
   await joplin.data.put(['notes', note.id], null, { body: note.body });
 }
 
-const handleMessage = async (message: {message:string,sheets:any[],jsonData:Settings}) => {
-  if(message.message === 'excalidraw_sync') {
+const handleMessage = async (message: { message: string, sheets: any[], jsonData: Settings }) => {
+  if (message.message === 'excalidraw_sync') {
     handleSync(message)
+  }
+}
+
+function diagramMarkdown(diagramId: string) {
+  return `![excalidraw](:/${diagramId})`
+}
+
+const buildDialogHTML = (diagramBody: string): string => {
+  return `
+		<form name="main">
+			<input type="" id="excalidraw_diagram_json" value='${diagramBody}'>
+		</form>
+		`
+}
+
+const openDialog = async (context: string) => {
+  const appPath = await joplin.plugins.installationDir();
+
+  let dialogs = joplin.views.dialogs;
+  let diglogHandle = await dialogs.create(`myDialog2-${uuidv4()}`);
+
+  let header = buildDialogHTML(context);
+  let iframe = "";
+  // let iframe = `<iframe id="excalidraw_iframe" style="position:absolute;border:0;width:100%;height:100%;" src="${appPath}\\local-excalidraw\\index.html" title="description"></iframe>`
+
+  await dialogs.setHtml(diglogHandle, header + iframe);
+  await dialogs.setButtons(diglogHandle, [
+    { id: 'ok', title: 'Save' },
+    { id: 'cancel', title: 'Close' }
+  ]);
+
+  let dialogResult = await dialogs.open(diglogHandle);
+  if (dialogResult.id === 'ok') {
+    let diagramId_new = await createDiagramResource("", dialogResult.formData.main.excalidraw_diagram_json)
+    await joplin.commands.execute('insertText', diagramMarkdown(diagramId_new))
+    let diagramResource = await getDiagramResource(diagramId_new)
+    console.log("what is ?" + diagramResource.body);
   }
 }
 
 joplin.plugins.register({
   onStart: async () => {
-	await joplin.commands.register({
-		name: 'switchExcalidraw',
-		label: 'switch excalidraw panel',
-		iconName: 'fa fa-palette',
-		execute: switchView
-	});
+    /* support excalidraw dialog */
+    await joplin.contentScripts.register(
+      ContentScriptType.MarkdownItPlugin,
+      Config.ContentScriptId,
+      './contentScript.js'
+    );
 
-	await joplin.views.toolbarButtons.create('switchExcalidraw', 'switchExcalidraw', ToolbarButtonLocation.NoteToolbar);
+    await joplin.contentScripts.onMessage(Config.ContentScriptId, (message: any) => {
+      console.log("on message: "+ message)
+      openDialog(message);
+    });
+
+    /* support excalidraw panel */
+    await joplin.commands.register({
+      name: 'switchExcalidraw',
+      label: 'switch excalidraw panel',
+      iconName: 'fa fa-palette',
+      execute: switchView
+    });
+
+    await joplin.views.toolbarButtons.create('switchExcalidraw', 'switchExcalidraw', ToolbarButtonLocation.NoteToolbar);
 
     await joplin.workspace.onNoteSelectionChange(updateView)
   },

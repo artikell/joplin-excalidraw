@@ -1,0 +1,30 @@
+.container {
+    font-family: sans-serif;
+    text-align: center;
+  }
+  
+  .button-wrapper button {
+    z-index: 1;
+    height: 40px;
+    width: 100px;
+    margin: 10px;
+    padding: 5px;
+  }
+  
+  .excalidraw .App-menu_top .buttonList {
+    display: flex;
+  }
+  
+  .excalidraw-wrapper {
+    height: 800px;
+    margin: 50px;
+    position: relative;
+  }
+  
+  :root[dir="ltr"]
+    .excalidraw
+    .layer-ui__wrapper
+    .zen-mode-transition.App-menu_bottom--transition-left {
+    transform: none;
+  }
+  
