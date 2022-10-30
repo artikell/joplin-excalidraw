@@ -4,12 +4,11 @@ import { v4 as uuidv4 } from 'uuid';
 import { ContentScriptType, ToolbarButtonLocation, MenuItem, MenuItemLocation } from 'api/types'
 import { Settings } from "./types"
 import { replaceData, parseData, isExcalidraw } from './handleStrings'
-import { createDiagramResource, getDiagramResource, updateDiagramResource } from './resources';
+import { createDiagramResource, getDiagramResource, updateDiagramResource, clearDiskCache } from './resources';
 
 const Config = {
   ContentScriptId: 'excalidraw-script',
 }
-
 
 let panel, note, isOpening, isHide
 
@@ -22,9 +21,9 @@ const createPanel = async (): Promise<string> => {
 
   await joplin.views.panels.addScript(panel, './webview.js')
   await joplin.views.panels.addScript(panel, './webview.css')
-  await joplin.views.panels.addScript(panel, './react.development.js')
-  await joplin.views.panels.addScript(panel, './react-dom.development.js')
-  await joplin.views.panels.addScript(panel, './excalidraw.development.js')
+  await joplin.views.panels.addScript(panel, '../resource/react.development.js')
+  await joplin.views.panels.addScript(panel, '../resource/react-dom.development.js')
+  await joplin.views.panels.addScript(panel, '../resource/excalidraw.development.js')
 
   return panel
 }
@@ -79,22 +78,32 @@ const handleMessage = async (message: { message: string, sheets: any[], jsonData
     handleSync(message)
   }
 }
-// ´´½¨dlgÄÚÇ¶form
-const buildDialogHTML = (diagramBody: string): string =>  {
-	return `
-		<form name="main">
-			<input type="" id="excalidraw_diagram_json" value='${diagramBody}'>
+
+const buildDialogHTML = (diagramBody: string): string => {
+  return `
+		<form name="main" style="display:none">
+			<input type="" name="excalidraw_diagram_json"  id="excalidraw_diagram_json" value='${diagramBody}'>
 		</form>
 		`
 }
 
-const openDialog = async (context: string) => {
+function diagramMarkdown(diagramId: string) {
+  return `![excalidraw](excalidraw://${diagramId})`
+}
+
+const openDialog = async (diagramId: string, isNewDiagram: boolean) => {
+  let diagramBody = "{}";
   const appPath = await joplin.plugins.installationDir();
 
-  let dialogs = joplin.views.dialogs;
-  let diglogHandle = await dialogs.create(`myDialog2-${uuidv4()}`);
+  if (!isNewDiagram) {
+    const diagramResource = await getDiagramResource(diagramId);
+    diagramBody = diagramResource.dataJson;
+  }
 
-  let header = buildDialogHTML(context);
+  let dialogs = joplin.views.dialogs;
+  let diglogHandle = await dialogs.create(`excalidraw-dialog-${uuidv4()}`);
+  
+  let header = buildDialogHTML(diagramBody);
   let iframe = `<iframe id="excalidraw_iframe" style="position:absolute;border:0;width:100%;height:100%;" src="${appPath}\\local-excalidraw\\index.html" title="description"></iframe>`
 
   await dialogs.setHtml(diglogHandle, header + iframe);
@@ -102,11 +111,23 @@ const openDialog = async (context: string) => {
     { id: 'ok', title: 'Save' },
     { id: 'cancel', title: 'Close' }
   ]);
-  await dialogs.open(diglogHandle)
+  await dialogs.setFitToContent(diglogHandle, false);
+
+  let dialogResult = await dialogs.open(diglogHandle);
+  if (dialogResult.id === 'ok') {
+    if (isNewDiagram) {
+      diagramId = await createDiagramResource(dialogResult.formData.main.excalidraw_diagram_json)
+      await joplin.commands.execute('insertText', diagramMarkdown(diagramId))
+    } else {
+      await updateDiagramResource(diagramId, dialogResult.formData.main.excalidraw_diagram_json)
+    }
+  }
 }
 
 joplin.plugins.register({
   onStart: async () => {
+
+    clearDiskCache();
     /* support excalidraw dialog */
     await joplin.contentScripts.register(
       ContentScriptType.MarkdownItPlugin,
@@ -115,9 +136,19 @@ joplin.plugins.register({
     );
 
     await joplin.contentScripts.onMessage(Config.ContentScriptId, (message: any) => {
-      console.log(message)
-      openDialog(message);
+      openDialog(message, false);
     });
+    
+    await joplin.commands.register({
+      name: 'addExcalidraw',
+      label: 'add excalidraw panel',
+      iconName: 'fa fa-palette',
+      execute: async () => {
+        openDialog("", true);
+      }
+    });
+
+    await joplin.views.toolbarButtons.create('addExcalidraw', 'addExcalidraw', ToolbarButtonLocation.EditorToolbar);
 
     /* support excalidraw panel */
     await joplin.commands.register({

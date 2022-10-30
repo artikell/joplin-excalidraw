@@ -6,8 +6,7 @@ const fs = joplin.require('fs-extra')
 
 const Config = {
     TempFolder: `${tmpdir}${sep}joplin-excalidraw-plugin${sep}`,
-    DataImageRegex: /^data:image\/(?<extension>png|svg)(?:\+xml)?;base64,(?<blob>.*)/,
-    TitlePrefix: 'mindmap-',
+    TitlePrefix: 'excalidraw-',
 }
 
 export interface IDiagramOptions {
@@ -19,10 +18,7 @@ function generateId() {
 }
 
 function buildTitle(json_resource_id: string): string {
-    return Config.TitlePrefix + json_resource_id
-}
-function parseTitle(title: string): any {
-    return title.replace(Config.TitlePrefix, '')
+    return Config.TitlePrefix + Date.parse(new Date().toString())
 }
 
 export function clearDiskCache(): void {
@@ -30,76 +26,37 @@ export function clearDiskCache(): void {
     fs.mkdirSync(Config.TempFolder, { recursive: true })
 }
 
-async function writeTempFile(name: string, data: string, filePath: string = null): Promise<string> {
-    const matches = data.match(Config.DataImageRegex)
-    if (!matches) {
-        throw new Error('Invalid image data')
-    }
-    if (!filePath) {
-        filePath = `${Config.TempFolder}${name}.${matches.groups.extension}`
-    }
-    await fs.writeFile(filePath, matches.groups.blob, 'base64')
-    return filePath
-}
-
 async function writeJsonFile(name: string, data: string, filePath: string = null): Promise<string> {
     if (!filePath) {
         filePath = `${Config.TempFolder}${name}.json`
     }
+    filePath += buildTitle(data)
     await fs.writeFile(filePath, data)
     return filePath
 }
 
 export async function getDiagramResource(diagramId: string): Promise<{ body: string, dataJson:string }> {
-    let resourceProperties = await joplin.data.get(['resources', diagramId])
     let resourceData = await joplin.data.get(['resources', diagramId, 'file'])
-
-    let dataJson: string = ""
-    try {
-        dataJson = parseTitle(resourceProperties.title)
-    } catch (e) {
-        console.warn('getDiagramResource - json resource ID parsing failed:', e)
-    }
-
-    console.log('getDiagramResource', resourceProperties, resourceData)
-    if (!resourceData.contentType.startsWith('image')) {
-        throw new Error('Invalid resource content type. The resource must be an image')
-    }
-    console.log('getDiagramResource diagramId', diagramId);
-    console.log('getDiagramResource json', dataJson);
     return {
-        body: `data:${resourceData.contentType};base64,${Buffer.from(resourceData.body).toString('base64')}`,
-        dataJson: dataJson
+        body: "",
+        dataJson: new TextDecoder().decode(resourceData.body)
     }
 }
 
-export async function createDiagramResource(data: string, dataJson:string): Promise<string> {
-    let diagramId = generateId()
-    // let json_resource_id = generateId()
-
-    let filePath = await writeTempFile(diagramId, data)
-    // let filePath_json = await writeJsonFile(json_resource_id, dataJson)
-    let createdResource = await joplin.data.post(['resources'], null, { id: diagramId, title: buildTitle(dataJson) }, [{ path: filePath }])
-    // let createdResource_json = await joplin.data.post(['resources'], null, { id: json_resource_id, title: "mindmap-data-json"}, [{path: filePath_json}])
-
-    console.log('createResource diagramId', diagramId);
-    console.log('createResource json', dataJson);
+export async function updateDiagramResource(diagramId:string, dataJson:string): Promise<string> {
+    let filePath = await writeJsonFile(diagramId, dataJson)
+    await joplin.data.put(['resources', diagramId], null, {title: buildTitle(dataJson) }, [{ path: filePath }])
     return diagramId
 }
 
-export async function updateDiagramResource(diagramId: string, data: string, dataJson:string ): Promise<string> {
-    let newDiagramId = generateId()
-    // let new_json_resource_id = generateId()
 
-    let filePath = await writeTempFile(newDiagramId, data)
-    // let filePath_json = await writeJsonFile(new_json_resource_id, dataJson)
-    let createdResource = await joplin.data.post(['resources'], null, { id: newDiagramId, title: buildTitle(dataJson) }, [{ path: filePath }])
-    // let createdResource_json = await joplin.data.post(['resources'], null, { id: new_json_resource_id, title: "mindmap-data-json"}, [{path: filePath_json}])
-    // let createdResource_json = await joplin.data.post(['notes'], null, { id: newDiagramId, body: dataJson })
-    // I will not delete the previous resource just in case it has been copied in another note
-    // await joplin.data.delete(['resources', diagramId])
-    // console.log('createdResource', createdResource)
-    return newDiagramId
+export async function createDiagramResource(dataJson:string): Promise<string> {
+    let diagramId = generateId()
+
+    let filePath = await writeJsonFile(diagramId, dataJson)
+    await joplin.data.post(['resources'], null, { id: diagramId, title: buildTitle(dataJson) }, [{ path: filePath }])
+
+    return diagramId
 }
 
 export async function isDiagramResource(diagramId: string): Promise<boolean> {
