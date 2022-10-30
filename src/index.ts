@@ -21,9 +21,9 @@ const createPanel = async (): Promise<string> => {
 
   await joplin.views.panels.addScript(panel, './webview.js')
   await joplin.views.panels.addScript(panel, './webview.css')
-  await joplin.views.panels.addScript(panel, '../resource/react.development.js')
-  await joplin.views.panels.addScript(panel, '../resource/react-dom.development.js')
-  await joplin.views.panels.addScript(panel, '../resource/excalidraw.development.js')
+  await joplin.views.panels.addScript(panel, './resource/react.development.js')
+  await joplin.views.panels.addScript(panel, './resource/react-dom.development.js')
+  await joplin.views.panels.addScript(panel, './resource/excalidraw.development.js')
 
   return panel
 }
