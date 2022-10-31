@@ -3,8 +3,8 @@ import { Settings } from "./types"
 const dataText = 'excalidraw-data'
 const dataTextMD = `\`\`\`${dataText}`
 
-export const isExcalidraw = (input: string): boolean => input.toLocaleLowerCase().includes('```excalidraw```')
-export const hasData = (input: string): boolean => input.toLocaleLowerCase().includes(dataText)
+export const isExcalidraw = (input: string): boolean => input == undefined?false:input.toLocaleLowerCase().includes('```excalidraw```')
+export const hasData = (input: string): boolean => input == undefined?false:input.toLocaleLowerCase().includes(dataText)
 
 export const parseData = (input: string): Settings => {
   const data = isolateData(input)

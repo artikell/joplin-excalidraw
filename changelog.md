@@ -8,3 +8,9 @@
 
 - Slows the synchronization speed, making it easy to modify notes
 -  Add switch button of the panel
+
+## v1.3.0 - 2022-11-1 00:16:18
+
+- refactor: Bundle webview with vite @Winbee
+- feature: Support excalidraw dialog
+- bug: Fix excalidraw panel in windows open error
