@@ -4,15 +4,7 @@ Implementation of [excalidraw](https://github.com/excalidraw/excalidraw) for Jop
 
 ## How to?
 
-Initiate a Excalidraw by writing following in the markdown:
-
-```md
-```excalidraw```
-```
-
-You can now re-open the note and the plugin will load.
-
-Or use special tags to represent excalidraw content
+You can click the button on the toolbar to generate the following content：
 
 ```
 ![excalidraw](excalidraw://970d7f3995b94321827cdcb8b9e16dc0)

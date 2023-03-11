@@ -14,3 +14,8 @@
 - refactor: Bundle webview with vite @Winbee
 - feature: Support excalidraw dialog
 - bug: Fix excalidraw panel in windows open error
+
+## v1.4.0 - 2023-3-11 12:19:36
+
+- feature: Remove excalidraw panel
+- feature: Modify excalidraw icon

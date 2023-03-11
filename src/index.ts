@@ -2,81 +2,10 @@ import joplin from 'api'
 import { v4 as uuidv4 } from 'uuid';
 
 import { ContentScriptType, ToolbarButtonLocation, MenuItem, MenuItemLocation } from 'api/types'
-import { Settings } from "./types"
-import { replaceData, parseData, isExcalidraw } from './handleStrings'
 import { createDiagramResource, getDiagramResource, updateDiagramResource, clearDiskCache } from './resources';
 
 const Config = {
   ContentScriptId: 'excalidraw-script',
-}
-
-let panel, note, isOpening, isHide
-
-const createPanel = async (): Promise<string> => {
-  // unfortunately it's wayyy more reliable to just close and re-create than to re-use a panel :'(
-  const panel = await joplin.views.panels.create(`excalidraw-${uuidv4()}`)
-  await joplin.views.panels.onMessage(panel, handleMessage)
-
-  await joplin.views.panels.setHtml(panel, '<div class="container" id="excalidraw">Hello Excalidraw!!!</div>')
-
-  await joplin.views.panels.addScript(panel, './webview/index.js')
-  await joplin.views.panels.addScript(panel, './webview/index.css')
-
-  return panel
-}
-
-const handleClose = async () => {
-  if (!panel || isHide) return
-  await joplin.views.panels.postMessage(panel, { message: 'excalidraw_close' })
-  await joplin.views.panels.hide(panel)
-  isHide = true
-}
-
-const handleOpen = async () => {
-  panel = await createPanel()
-  const options = await parseData(note.body)
-  await new Promise(resolve => setTimeout(() => resolve(), 500))
-  await joplin.views.panels.postMessage(panel, {
-    message: 'excalidraw_init',
-    options
-  })
-  await joplin.views.panels.show(panel)
-  isHide = false
-}
-
-const switchView = async () => {
-  if (isHide) {
-    await updateView()
-  } else {
-    await handleClose()
-  }
-}
-
-const updateView = async () => {
-  isOpening = true
-  await handleClose()
-
-  note = await joplin.workspace.selectedNote()
-
-  console.log("test")
-
-  if (isExcalidraw(note?.body)) {
-    await handleOpen()
-  }
-  isOpening = false
-}
-
-const handleSync = async ({ jsonData }) => {
-  if (!isExcalidraw(note?.body) || isOpening) return
-  note.body = replaceData(note.body, JSON.stringify(jsonData))
-  await joplin.commands.execute("editor.setText", note.body);
-  await joplin.data.put(['notes', note.id], null, { body: note.body });
-}
-
-const handleMessage = async (message: { message: string, sheets: any[], jsonData: Settings }) => {
-  if (message.message === 'excalidraw_sync') {
-    handleSync(message)
-  }
 }
 
 const buildDialogHTML = (diagramBody: string): string => {
@@ -127,6 +56,10 @@ const openDialog = async (diagramId: string, isNewDiagram: boolean) => {
 joplin.plugins.register({
   onStart: async () => {
 
+    const installDir = await joplin.plugins.installationDir();		
+		const excalidrawCssFilePath = installDir + '/excalidraw.css';
+		await (joplin as any).window.loadChromeCssFile(excalidrawCssFilePath);
+
     clearDiskCache();
     /* support excalidraw dialog */
     await joplin.contentScripts.register(
@@ -142,24 +75,12 @@ joplin.plugins.register({
     await joplin.commands.register({
       name: 'addExcalidraw',
       label: 'add excalidraw panel',
-      iconName: 'fa fa-palette',
+      iconName: 'icon-excalidraw-plus-icon-filled',
       execute: async () => {
         openDialog("", true);
       }
     });
 
     await joplin.views.toolbarButtons.create('addExcalidraw', 'addExcalidraw', ToolbarButtonLocation.EditorToolbar);
-
-    /* support excalidraw panel */
-    await joplin.commands.register({
-      name: 'switchExcalidraw',
-      label: 'switch excalidraw panel',
-      iconName: 'fa fa-palette',
-      execute: switchView
-    });
-
-    await joplin.views.toolbarButtons.create('switchExcalidraw', 'switchExcalidraw', ToolbarButtonLocation.NoteToolbar);
-
-    await joplin.workspace.onNoteSelectionChange(updateView)
   },
 })

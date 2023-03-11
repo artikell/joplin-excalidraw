@@ -1,6 +1,6 @@
 {
   "name": "joplin-plugin-joplin-excalidraw",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "scripts": {
     "dist:webview": "vite build --config vite-webview.config.ts --emptyOutDir",
     "dist:local": "vite build --config vite-local.config.ts --emptyOutDir",
