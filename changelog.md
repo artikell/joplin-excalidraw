@@ -19,3 +19,6 @@
 
 - feature: Remove excalidraw panel
 - feature: Modify excalidraw icon
+
+## v1.4.1 - 2023-03-12 08:41:08
+- bug: Fix no such file or directory error

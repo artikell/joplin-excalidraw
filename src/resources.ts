@@ -22,7 +22,9 @@ function buildTitle(json_resource_id: string): string {
 }
 
 export function clearDiskCache(): void {
-    fs.rmdirSync(Config.TempFolder, { recursive: true })
+    if (fs.existsSync(Config.TempFolder)) {
+        fs.rmdirSync(Config.TempFolder, { recursive: true })
+    }
     fs.mkdirSync(Config.TempFolder, { recursive: true })
 }
 
